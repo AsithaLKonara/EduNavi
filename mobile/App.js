@@ -1,42 +1,46 @@
 import "./global.css";
+import React, { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from "expo-status-bar";
-import { Text, View, SafeAreaView } from "react-native";
-import { Compass, GraduationCap, BookOpen } from "lucide-react-native";
+import { supabase } from './src/lib/supabase';
+import { useAuthStore } from './src/store/authStore';
+import AuthScreen from './src/screens/AuthScreen';
+import HomeScreen from './src/screens/HomeScreen';
 
 export default function App() {
-  return (
-    <SafeAreaView className="flex-1 bg-primary">
-      <View className="flex-1 items-center justify-center p-6">
-        <View className="mb-8 items-center">
-          <View className="bg-secondary p-4 rounded-full mb-4 shadow-lg">
-            <GraduationCap size={64} color="#A3D900" />
-          </View>
-          <Text className="text-4xl font-bold text-white">EduNavi</Text>
-          <Text className="text-secondary-light text-center mt-2 italic">
-            Your Direction. Your Education. Your Future.
-          </Text>
-        </View>
+  const { session, setSession, setUser, user } = useAuthStore();
+  const [loading, setLoading] = React.useState(true);
 
-        <View className="w-full space-y-4">
-          <View className="bg-primary-light p-4 rounded-2xl flex-row items-center border border-white/10">
-            <Compass color="#00A3A3" size={24} />
-            <View className="ml-4">
-              <Text className="text-white font-semibold text-lg">Smart Matching</Text>
-              <Text className="text-white/60 text-sm">AI-driven course recommendations</Text>
-            </View>
-          </View>
+  useEffect(() => {
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-          <View className="bg-primary-light p-4 rounded-2xl flex-row items-center border border-white/10 mt-4">
-            <BookOpen color="#A3D900" size={24} />
-            <View className="ml-4">
-              <Text className="text-white font-semibold text-lg">Local Intelligence</Text>
-              <Text className="text-white/60 text-sm">Gov, Private & Global courses</Text>
-            </View>
-          </View>
-        </View>
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-        <StatusBar style="light" />
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-primary items-center justify-center">
+        <ActivityIndicator size="large" color="#00A3A3" />
       </View>
-    </SafeAreaView>
+    );
+  }
+
+  return (
+    <>
+      {session ? <HomeScreen /> : <AuthScreen />}
+      <StatusBar style="light" />
+    </>
   );
 }

@@ -16,10 +16,10 @@ This file tracks the real-time progress of the EduNavi project. As per project r
   - [x] Configure branding colors and theme
   - [x] Setup Lucide Icons and basic UI layout
   - [x] Verify mobile bundle
-- [/] **Database & Auth (Supabase)**
+- [x] **Database & Auth (Supabase)**
   - [x] Connect Prisma to Supabase (Configured with Prisma 7)
   - [x] Apply initial migrations (Tables created in Supabase)
-  - [x] Setup Supabase Client in Mobile
+  - [x] Setup Supabase Auth in Mobile (Sign In/Up implemented)
   - [x] Setup Prisma Service in Backend
 
 ## 🟡 Phase 2: Course Data System
