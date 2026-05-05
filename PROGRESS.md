@@ -17,8 +17,8 @@ This file tracks the real-time progress of the EduNavi project. As per project r
   - [x] Setup Lucide Icons and basic UI layout
   - [x] Verify mobile bundle
 - [/] **Database & Auth (Supabase)**
-  - [x] Connect Prisma to Supabase (Configured with placeholders)
-  - [ ] Apply initial migrations (Awaiting credentials)
+  - [x] Connect Prisma to Supabase (Configured with Prisma 7)
+  - [x] Apply initial migrations (Tables created in Supabase)
   - [x] Setup Supabase Client in Mobile
   - [x] Setup Prisma Service in Backend
 
