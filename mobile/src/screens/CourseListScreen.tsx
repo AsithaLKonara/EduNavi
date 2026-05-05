@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Dimensions, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { getCourses } from '../services/api';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
-import { Search, Filter, BookOpen, LogOut, ChevronRight, Award, DollarSign, Calendar } from 'lucide-react-native';
+import { Search, BookOpen, LogOut, ChevronRight, Award } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { MotiView } from 'moti';
 
+const { width, height } = Dimensions.get('window');
 const CATEGORIES = ['All', 'Government', 'Private', 'Technology', 'Business', 'Healthcare'];
 
 export default function CourseListScreen() {
@@ -29,162 +32,192 @@ export default function CourseListScreen() {
                              course.category?.toLowerCase() === selectedCategory.toLowerCase());
   });
 
-  // Render a single premium skeleton card
-  const renderSkeletonCard = () => (
-    <View className="bg-primary-light/50 border border-white/5 p-5 rounded-3xl mb-4 h-40 justify-between">
-      <View>
-        <View className="flex-row justify-between items-center mb-3">
-          <View className="bg-white/10 w-20 h-6 rounded-lg" />
-          <View className="bg-white/10 w-6 h-6 rounded-full" />
+  const renderSkeletonCard = (index: number) => (
+    <MotiView 
+      from={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'spring', delay: index * 100 }}
+      className="mb-4 rounded-3xl overflow-hidden"
+    >
+      <BlurView intensity={20} tint="light" className="p-5 border border-white/10 h-40 justify-between bg-white/5">
+        <View>
+          <View className="flex-row justify-between items-center mb-3">
+            <View className="bg-white/10 w-20 h-6 rounded-lg" />
+            <View className="bg-white/10 w-6 h-6 rounded-full" />
+          </View>
+          <View className="bg-white/10 w-3/4 h-5 rounded-md mb-2" />
+          <View className="bg-white/10 w-1/2 h-4 rounded-md" />
         </View>
-        <View className="bg-white/10 w-3/4 h-5 rounded-md mb-2" />
-        <View className="bg-white/10 w-1/2 h-4 rounded-md" />
-      </View>
-      <View className="flex-row justify-between items-center border-t border-white/5 pt-3">
-        <View className="bg-white/10 w-24 h-4 rounded-md" />
-        <View className="bg-white/10 w-16 h-4 rounded-md" />
-      </View>
-    </View>
+        <View className="flex-row justify-between items-center border-t border-white/5 pt-3">
+          <View className="bg-white/10 w-24 h-4 rounded-md" />
+          <View className="bg-white/10 w-16 h-4 rounded-md" />
+        </View>
+      </BlurView>
+    </MotiView>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-primary">
-      {/* Header */}
-      <View className="px-6 py-4 flex-row justify-between items-center border-b border-white/5">
-        <View>
-          <Text className="text-white/60 text-xs font-semibold uppercase tracking-wider font-semibold">EduNavi Discovery</Text>
-          <Text className="text-white text-2xl font-bold tracking-tight">Find Your Path</Text>
-        </View>
-        <TouchableOpacity 
-          onPress={handleSignOut}
-          className="w-10 h-10 bg-primary-light border border-white/10 rounded-full items-center justify-center active:bg-white/10"
-        >
-          <LogOut size={16} color="#ef4444" />
-        </TouchableOpacity>
-      </View>
+    <View className="flex-1">
+      {/* Deep Background Gradient */}
+      <LinearGradient
+        colors={['#000814', '#001A33', '#000D1A']}
+        style={{ position: 'absolute', width, height }}
+      />
+      
+      {/* Ambient Background Glows */}
+      <View 
+        style={{ 
+          position: 'absolute', top: height * 0.2, right: -width * 0.3, 
+          width: width * 0.8, height: width * 0.8, 
+          borderRadius: width * 0.4, backgroundColor: '#00A3A3', 
+          opacity: 0.1, transform: [{ scale: 1.5 }] 
+        }} 
+      />
+      <View 
+        style={{ 
+          position: 'absolute', bottom: height * 0.1, left: -width * 0.3, 
+          width: width * 0.8, height: width * 0.8, 
+          borderRadius: width * 0.4, backgroundColor: '#A3D900', 
+          opacity: 0.08, transform: [{ scale: 1.5 }] 
+        }} 
+      />
 
-      {/* Search and Category filters */}
-      <View className="px-6 pt-5 pb-2">
-        <View className="flex-row items-center bg-primary-light border border-white/10 rounded-2xl px-4 h-14 mb-4">
-          <Search size={18} color="#64748b" />
-          <TextInput
-            className="flex-1 ml-3 text-white font-medium h-full"
-            placeholder="Search courses, institutes, careers..."
-            placeholderTextColor="#64748b"
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
-              <Text className="text-white/40 text-sm font-semibold">Clear</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Horizontal Category Scroll */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          className="py-1"
-          contentContainerStyle={{ paddingRight: 20 }}
-        >
-          {CATEGORIES.map((category) => {
-            const isSelected = selectedCategory === category;
-            return (
-              <TouchableOpacity
-                key={category}
-                onPress={() => setSelectedCategory(category)}
-                className={`px-4 py-2.5 rounded-full mr-2.5 border transition-all duration-200 ${
-                  isSelected 
-                    ? 'bg-secondary border-secondary shadow-lg shadow-secondary/20' 
-                    : 'bg-primary-light/40 border-white/10'
-                }`}
+      {/* Glassmorphic Sticky Header */}
+      <View className="pt-12 z-10 overflow-hidden rounded-b-3xl">
+        <BlurView intensity={30} tint="dark" className="px-6 py-4 bg-[#001A33]/50">
+          <View className="flex-row justify-between items-center mb-4">
+            <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 100 }}>
+              <Text className="text-secondary text-xs font-bold uppercase tracking-widest">EduNavi Discovery</Text>
+              <Text className="text-white text-3xl font-bold tracking-tight">Find Your Path</Text>
+            </MotiView>
+            <MotiView from={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 200 }}>
+              <TouchableOpacity 
+                onPress={handleSignOut}
+                className="w-10 h-10 border border-white/10 rounded-full items-center justify-center bg-white/5 active:bg-white/10"
               >
-                <Text 
-                  className={`text-sm font-semibold ${
-                    isSelected ? 'text-white' : 'text-white/70'
-                  }`}
-                >
-                  {category}
-                </Text>
+                <LogOut size={16} color="#ef4444" />
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+            </MotiView>
+          </View>
+
+          {/* Search Bar */}
+          <MotiView from={{ opacity: 0, translateY: -10 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 300 }}>
+            <View className="flex-row items-center border border-white/10 rounded-2xl px-4 h-14 bg-white/5">
+              <Search size={18} color="#64748b" />
+              <TextInput
+                className="flex-1 ml-3 text-white font-medium h-full"
+                placeholder="Search courses, institutes, careers..."
+                placeholderTextColor="#64748b"
+                value={search}
+                onChangeText={setSearch}
+              />
+              {search.length > 0 && (
+                <TouchableOpacity onPress={() => setSearch('')}>
+                  <Text className="text-white/40 text-sm font-semibold">Clear</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </MotiView>
+
+          {/* Category Filter Pills */}
+          <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 400 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-4 -mb-2">
+              {CATEGORIES.map((category) => {
+                const isSelected = selectedCategory === category;
+                return (
+                  <TouchableOpacity
+                    key={category}
+                    onPress={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 rounded-full mr-3 border transition-all duration-300 ${
+                      isSelected 
+                        ? 'bg-secondary/20 border-secondary' 
+                        : 'bg-white/5 border-white/10'
+                    }`}
+                  >
+                    <Text className={`text-sm font-semibold ${isSelected ? 'text-secondary' : 'text-white/60'}`}>
+                      {category}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </MotiView>
+        </BlurView>
       </View>
 
       {/* Main Course Feed */}
       {isLoading || isFetching ? (
-        <ScrollView className="px-6 py-4">
-          {renderSkeletonCard()}
-          {renderSkeletonCard()}
-          {renderSkeletonCard()}
+        <ScrollView className="flex-1 px-6 pt-4">
+          {[1, 2, 3].map((_, idx) => renderSkeletonCard(idx))}
         </ScrollView>
       ) : (
         <FlatList
           data={filteredCourses}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 10, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 100 }}
           onRefresh={refetch}
           refreshing={isFetching}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              activeOpacity={0.8}
-              className="bg-primary-light/40 border border-white/5 p-5 rounded-3xl mb-4 shadow-sm"
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <MotiView
+              from={{ opacity: 0, translateY: 50 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'spring', delay: index * 100, damping: 20 }}
             >
-              <View className="flex-row justify-between items-start">
-                <View className="flex-1">
-                  <View className="flex-row items-center mb-3">
-                    <View className="bg-secondary/15 px-2.5 py-1 rounded-lg border border-secondary/20">
-                      <Text className="text-secondary text-xs font-bold uppercase tracking-wider">{item.type || 'Course'}</Text>
-                    </View>
-                    {item.verified && (
-                      <View className="bg-accent/15 px-2.5 py-1 rounded-lg border border-accent/20 ml-2 flex-row items-center">
-                        <Award size={10} color="#A3D900" />
-                        <Text className="text-accent text-xs font-bold ml-1">VERIFIED</Text>
+              <TouchableOpacity activeOpacity={0.8} className="mb-5 rounded-3xl overflow-hidden shadow-lg shadow-black/40">
+                <BlurView intensity={25} tint="light" className="p-5 border border-white/10 bg-white/5">
+                  <View className="flex-row justify-between items-start mb-3">
+                    <View className="flex-row items-center flex-wrap flex-1">
+                      <View className="bg-secondary/15 px-2.5 py-1 rounded-md border border-secondary/20 mr-2 mb-2">
+                        <Text className="text-secondary text-[10px] font-bold uppercase tracking-wider">{item.type || 'Course'}</Text>
                       </View>
-                    )}
+                      {item.verified && (
+                        <View className="bg-accent/15 px-2.5 py-1 rounded-md border border-accent/20 flex-row items-center mb-2">
+                          <Award size={10} color="#A3D900" />
+                          <Text className="text-accent text-[10px] font-bold ml-1">VERIFIED</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View className="w-8 h-8 rounded-full bg-white/5 border border-white/10 items-center justify-center">
+                      <ChevronRight size={14} color="#94a3b8" />
+                    </View>
                   </View>
-                  <Text className="text-white font-bold text-lg leading-6 mb-1.5">{item.title}</Text>
-                  <Text className="text-white/50 text-sm font-medium">{item.provider}</Text>
-                </View>
-                <View className="w-8 h-8 rounded-full bg-white/5 items-center justify-center">
-                  <ChevronRight size={16} color="#64748b" />
-                </View>
-              </View>
-              
-              <View className="flex-row items-center justify-between mt-5 border-t border-white/5 pt-4">
-                <View className="flex-row items-center">
-                  <BookOpen size={14} color="#64748b" />
-                  <Text className="text-white/60 text-xs font-medium ml-1.5">{item.category || 'General Education'}</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <Text className="text-accent font-bold text-sm tracking-tight">
-                    {item.price ? `${item.currency || 'LKR'} ${item.price.toLocaleString()}` : 'Free'}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+                  
+                  <Text className="text-white font-bold text-xl leading-7 mb-1">{item.title}</Text>
+                  <Text className="text-white/50 text-sm font-medium mb-4">{item.provider}</Text>
+                  
+                  <View className="flex-row items-center justify-between border-t border-white/5 pt-4">
+                    <View className="flex-row items-center bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                      <BookOpen size={14} color="#00A3A3" />
+                      <Text className="text-white/80 text-xs font-semibold ml-2">{item.category || 'General Education'}</Text>
+                    </View>
+                    <Text className="text-accent font-bold text-base tracking-tight">
+                      {item.price ? `${item.currency || 'LKR'} ${item.price.toLocaleString()}` : 'Free'}
+                    </Text>
+                  </View>
+                </BlurView>
+              </TouchableOpacity>
+            </MotiView>
           )}
           ListEmptyComponent={
-            <View className="items-center justify-center mt-12 py-10 px-6 border border-dashed border-white/10 rounded-3xl">
+            <MotiView from={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="items-center justify-center mt-12 py-10 px-6 border border-dashed border-white/10 rounded-3xl bg-white/5">
               <BookOpen size={48} color="#64748b" />
               <Text className="text-white font-bold text-lg mt-4 text-center">No Courses Found</Text>
-              <Text className="text-white/40 text-sm mt-2 text-center max-w-[240px]">
-                We couldn't find any courses matching your filters. Try search keywords or choosing "All" categories.
+              <Text className="text-white/40 text-sm mt-2 text-center max-w-[240px] leading-5">
+                We couldn't find any courses matching your filters. Try adjusting your search criteria.
               </Text>
               {(search.length > 0 || selectedCategory !== 'All') && (
                 <TouchableOpacity 
                   onPress={() => { setSearch(''); setSelectedCategory('All'); }}
-                  className="mt-6 bg-primary-light border border-white/10 px-6 py-2.5 rounded-full"
+                  className="mt-6 border border-secondary/30 bg-secondary/10 px-6 py-2.5 rounded-full"
                 >
-                  <Text className="text-white font-semibold text-sm">Reset Filters</Text>
+                  <Text className="text-secondary font-bold text-sm">Reset Filters</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </MotiView>
           }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
