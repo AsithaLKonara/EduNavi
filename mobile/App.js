@@ -1,46 +1,28 @@
-import "./global.css";
-import React, { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import { StatusBar } from "expo-status-bar";
-import { supabase } from './src/lib/supabase';
+import './global.css';
+import { View, Text, SafeAreaView } from 'react-native';
 import { useAuthStore } from './src/store/authStore';
 import AuthScreen from './src/screens/AuthScreen';
-import HomeScreen from './src/screens/HomeScreen';
+import CourseListScreen from './src/screens/CourseListScreen';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 export default function App() {
-  const { session, setSession, setUser, user } = useAuthStore();
-  const [loading, setLoading] = React.useState(true);
+  const { session, isLoading } = useAuthStore();
 
-  useEffect(() => {
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <View className="flex-1 bg-primary items-center justify-center">
-        <ActivityIndicator size="large" color="#00A3A3" />
+      <View className="flex-1 bg-primary justify-center items-center">
+        <Text className="text-secondary text-lg">Loading EduNavi...</Text>
       </View>
     );
   }
 
   return (
-    <>
-      {session ? <HomeScreen /> : <AuthScreen />}
-      <StatusBar style="light" />
-    </>
+    <QueryClientProvider client={queryClient}>
+      <View className="flex-1 bg-primary">
+        {!session ? <AuthScreen /> : <CourseListScreen />}
+      </View>
+    </QueryClientProvider>
   );
 }

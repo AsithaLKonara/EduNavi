@@ -7,11 +7,12 @@ import { CoursesModule } from './courses/courses.module';
 import { AiModule } from './ai/ai.module';
 import { ScraperModule } from './scraper/scraper.module';
 import { MonetizationModule } from './monetization/monetization.module';
-import { PrismaService } from './prisma/prisma.service';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
     UsersModule,
     CoursesModule,
     AiModule,
@@ -19,6 +20,6 @@ import { PrismaService } from './prisma/prisma.service';
     MonetizationModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService],
 })
 export class AppModule {}

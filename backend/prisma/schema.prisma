@@ -28,7 +28,7 @@ model Course {
   category        String?
   price           Float?
   currency        String           @default("LKR")
-  url             String
+  url             String           @unique
   verified        Boolean          @default(false)
   institute       Institute?       @relation(fields: [instituteId], references: [id])
   instituteId     String?
